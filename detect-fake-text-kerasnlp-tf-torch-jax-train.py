@@ -28,11 +28,11 @@
 
 # # 📚 | Import Libraries 
 
-# In[ ]:
+# In[1]:
 
 
 import os
-os.environ["KERAS_BACKEND"] = "jax"  # "jax" or "tensorflow" or "torch" 
+os.environ["KERAS_BACKEND"] = "tensorflow"  # "jax" or "tensorflow" or "torch" 
 # os.environ["WANDB_SILENT"] = "false" # for wandb
 
 import keras_nlp
@@ -40,8 +40,8 @@ import keras_core as keras
 import keras_core.backend as K
 
 
-import torch
-# import jax
+# import torch
+# # import jax
 import tensorflow as tf
 # from tensorflow import keras
 # import tensorflow.keras.backend as K
@@ -56,7 +56,7 @@ cmap = mpl.cm.get_cmap('coolwarm')
 
 # ## Library Version
 
-# In[ ]:
+# In[2]:
 
 
 print("TensorFlow:", tf.__version__)
@@ -66,7 +66,7 @@ print("KerasNLP:", keras_nlp.__version__)
 
 # # ⚙️ | Configuration
 
-# In[ ]:
+# In[3]:
 
 
 class CFG:
@@ -103,7 +103,7 @@ class CFG:
 # # ♻️ | Reproducibility 
 # Sets value for random seed to produce similar result in each run.
 
-# In[ ]:
+# In[4]:
 
 
 keras.utils.set_random_seed(CFG.seed)
@@ -111,7 +111,7 @@ keras.utils.set_random_seed(CFG.seed)
 # # 💾 | Hardware
 # Following codes automatically detects hardware (TPU or GPU). 
 
-# In[ ]:
+# In[5]:
 
 
 def get_device():
@@ -145,7 +145,7 @@ def get_device():
             device='CPU'
     return strategy, device
 
-# In[ ]:
+# In[6]:
 
 
 # Initialize GPU/TPU/TPU-VM
@@ -154,7 +154,7 @@ CFG.replicas = strategy.num_replicas_in_sync
 
 # # 📁 | Dataset Path 
 
-# In[ ]:
+# In[7]:
 
 
 BASE_PATH = '/mnt/beegfs/xchen87/ai-gen/data/llm-detect-ai-generated-text'
@@ -169,7 +169,7 @@ BASE_PATH = '/mnt/beegfs/xchen87/ai-gen/data/llm-detect-ai-generated-text'
 
 # ## Train Data
 
-# In[ ]:
+# In[8]:
 
 
 df = pd.read_csv(f'{BASE_PATH}/train_essays.csv')  # Read CSV file into a DataFrame
@@ -198,7 +198,7 @@ plt.show()
 # * [ArguGPT](https://www.kaggle.com/datasets/alejopaullier/argugpt) @alejopaullier
 # 
 
-# In[ ]:
+# In[9]:
 
 
 # Load external data
@@ -239,7 +239,7 @@ plt.show()
 
 # ## Combine External and Train Data
 
-# In[ ]:
+# In[10]:
 
 
 df = ext_df.copy().reset_index(drop=True) # pd.concat([ext_df, df], axis=0)
@@ -249,7 +249,7 @@ df.head()
 # 
 # In the code snippet provided below, we will divide the existing **train** data into folds using a stratification of `label` column.
 
-# In[ ]:
+# In[11]:
 
 
 from sklearn.model_selection import StratifiedKFold  # Import package
@@ -279,7 +279,7 @@ df.groupby(["fold", "name", "source"]).size()
 # - [Preprocessing](https://keras.io/api/keras_nlp/preprocessing_layers/)
 # - [Tokenizers](https://keras.io/api/keras_nlp/tokenizers/)
 
-# In[ ]:
+# In[12]:
 
 
 preprocessor = keras_nlp.models.DebertaV3Preprocessor.from_preset(
@@ -289,7 +289,7 @@ preprocessor = keras_nlp.models.DebertaV3Preprocessor.from_preset(
 
 # Now, let's examine what the output shape of the preprocessing layer looks like. The output shape of the layer can be represented as $(num\_choices, sequence\_length)$.
 
-# In[ ]:
+# In[13]:
 
 
 inp = preprocessor(df.text.iloc[0])  # Process text for the first row
@@ -300,7 +300,7 @@ for k, v in inp.items():
 
 # We'll use the `preprocessing_fn` function to transform each text option using the `dataset.map(preprocessing_fn)` method.
 
-# In[ ]:
+# In[14]:
 
 
 def preprocess_fn(text, label=None):
@@ -313,7 +313,7 @@ def preprocess_fn(text, label=None):
 # 
 # To learn more about `tf.data`, refer to this [documentation](https://www.tensorflow.org/guide/data).
 
-# In[ ]:
+# In[15]:
 
 
 def build_dataset(texts, labels=None, batch_size=32,
@@ -338,7 +338,7 @@ def build_dataset(texts, labels=None, batch_size=32,
 # 
 # The function below generates the training and validation datasets for a given fold.
 
-# In[ ]:
+# In[16]:
 
 
 def get_datasets(fold):
@@ -368,15 +368,16 @@ def get_datasets(fold):
 # 
 # To monitor the training of my text-based model, I'll make use of **Weights & Biases**. Weights & Biases (W&B) is an MLOps platform that offers experiment tracking, dataset versioning, and model management functionalities, aiding in efficient model development. 
 
-# In[ ]:
+# In[17]:
 
 
 import wandb  # Import wandb library for experiment tracking
 
 try:
-    from kaggle_secrets import UserSecretsClient  # Import UserSecretsClient
-    user_secrets = UserSecretsClient()  # Create secrets client instance
-    api_key = user_secrets.get_secret("WANDB")  # Get API key from Kaggle secrets
+    # from kaggle_secrets import UserSecretsClient  # Import UserSecretsClient
+    api_key = os.environ['WANDB_API_KEY']
+    # user_secrets = UserSecretsClient()  # Create secrets client instance
+    # api_key = user_secrets.get_secret("WANDB")  # Get API key from Kaggle secrets
     wandb.login(key=api_key)  # Login to wandb with the API key
     anonymous = None  # Set anonymous mode to None
 except:
@@ -393,7 +394,7 @@ except:
 # 
 # For more details, please check the [official documentation](https://docs.wandb.ai/ref/python/integrations/keras).
 
-# In[ ]:
+# In[18]:
 
 
 # Initializes the W&B run with a config file and W&B run settings.
@@ -425,7 +426,7 @@ def get_wb_callbacks(fold):
 # 
 # **Importance:** A well-structured learning rate schedule is essential for efficient model training, ensuring optimal convergence and avoiding issues such as overshooting or stagnation.
 
-# In[ ]:
+# In[19]:
 
 
 import math
@@ -454,7 +455,7 @@ def get_lr_callback(batch_size=8, mode='cos', epochs=10, plot=False):
 
     return keras.callbacks.LearningRateScheduler(lrfn, verbose=False)  # Create lr callback
 
-# In[ ]:
+# In[20]:
 
 
 _=get_lr_callback(CFG.batch_size*CFG.replicas, plot=True)
@@ -463,7 +464,7 @@ _=get_lr_callback(CFG.batch_size*CFG.replicas, plot=True)
 # 
 # The function below will gather all the training callbacks, such as `lr_scheduler`, `model_checkpoint`, `wandb_logger`, and etc.
 
-# In[ ]:
+# In[21]:
 
 
 def get_callbacks(fold):
@@ -494,7 +495,7 @@ def get_callbacks(fold):
 # 
 # Our approach involves using `keras_nlp.models.XXClassifier` to process each text and generatie logits. These logits are passed through a `softmax` function to produce the final output.
 
-# In[ ]:
+# In[22]:
 
 
 def build_model():
@@ -522,29 +523,127 @@ def build_model():
     )
     return model
 
-# In[ ]:
+# In[23]:
+
+
+def build_model():
+    # Instantiate the DebertaV3Classifier from KerasNLP
+    classifier = keras_nlp.models.DebertaV3Classifier.from_preset(
+        preset=CFG.preset,
+        preprocessor=None,  # We'll manually handle preprocessing
+        num_classes=1,
+    )
+
+    # Create input layers for token IDs and attention masks
+    input_ids = keras.Input(
+        shape=(CFG.sequence_length,), dtype=tf.int32, name="input_ids"
+    )
+    attention_mask = keras.Input(
+        shape=(CFG.sequence_length,), dtype=tf.int32, name="attention_mask"
+    )
+
+    # Pass the inputs through the classifier
+    logits = classifier([input_ids, attention_mask])
+
+    # Compute final output
+    outputs = keras.layers.Activation("sigmoid")(logits)
+
+    # Construct the model
+    model = keras.Model(inputs=[input_ids, attention_mask], outputs=outputs)
+
+    # Compile the model
+    model.compile(
+        optimizer=keras.optimizers.AdamW(learning_rate=5e-6),
+        loss=keras.losses.BinaryCrossentropy(label_smoothing=0.02),
+        metrics=[keras.metrics.AUC(name="auc")],
+        jit_compile=True,  # Just-in-Time compilation for speedup
+    )
+
+    return model
+
+# In[24]:
+
+
+# from tensorflow import keras
+import keras
+
+
+class DebertaV3Wrapper(keras.layers.Layer):
+    def __init__(self, deberta_model, **kwargs):
+        super(DebertaV3Wrapper, self).__init__(**kwargs)
+        self.deberta_model = deberta_model
+
+    def call(self, inputs):
+        return self.deberta_model(inputs)
+
+
+def build_model():
+    # Instantiate the DebertaV3Classifier from KerasNLP
+    classifier = keras_nlp.models.DebertaV3Classifier.from_preset(
+        preset=CFG.preset,
+        preprocessor=None,  # We'll manually handle preprocessing
+        num_classes=1,
+    )
+
+    # Create input layers for token IDs and attention masks
+    input_ids = keras.Input(
+        shape=(CFG.sequence_length,), dtype=tf.int32, name="input_ids"
+    )
+    attention_mask = keras.Input(
+        shape=(CFG.sequence_length,), dtype=tf.int32, name="attention_mask"
+    )
+
+    # Use the custom wrapper layer
+    deberta_wrapper = DebertaV3Wrapper(classifier)
+
+    # Pass the inputs through the wrapper
+    logits = deberta_wrapper([input_ids, attention_mask])
+
+    # Compute final output
+    outputs = keras.layers.Activation("sigmoid")(logits)
+
+    # Construct the model
+    model = keras.Model(inputs=[input_ids, attention_mask], outputs=outputs)
+
+    # Compile the model
+    model.compile(
+        optimizer=keras.optimizers.AdamW(learning_rate=5e-6),
+        loss=keras.losses.BinaryCrossentropy(label_smoothing=0.02),
+        metrics=[keras.metrics.AUC(name="auc")],
+        jit_compile=True,  # Just-in-Time compilation for speedup
+    )
+
+    return model
+
+# In[25]:
 
 
 # with strategy.scope
 model = build_model()
 
+# In[26]:
+
+
+keras.__version__
+
+
 # ### Model Summary
 
-# In[ ]:
+# In[27]:
 
 
 model.summary()
 
 # ### Model Plot
 
-# In[ ]:
+# In[28]:
 
 
 keras.utils.plot_model(model, show_shapes=True)
 
 # # 🚂 | Training
 
-# In[ ]:
+# In[29]:
 
 
 for fold in CFG.selected_folds:
