@@ -157,7 +157,7 @@ CFG.replicas = strategy.num_replicas_in_sync
 # In[ ]:
 
 
-BASE_PATH = '/kaggle/input/llm-detect-ai-generated-text'
+BASE_PATH = '/mnt/beegfs/xchen87/ai-gen/data/llm-detect-ai-generated-text'
 
 # # 📖 | Meta Data 
 # * `{test|train}_essays.csv`
@@ -202,8 +202,8 @@ plt.show()
 
 
 # Load external data
-ext_df1 = pd.read_csv('/kaggle/input/daigt-proper-train-dataset/train_drcat_04.csv')
-ext_df2 = pd.read_csv('/kaggle/input/argugpt/argugpt.csv')[['id','text','model']]
+ext_df1 = pd.read_csv('/mnt/beegfs/xchen87/ai-gen/data/daigt-proper-train-dataset/train_drcat_04.csv')
+ext_df2 = pd.read_csv('/mnt/beegfs/xchen87/ai-gen/data/argugpt/argugpt.csv')[['id','text','model']]
 
 ext_df2.rename(columns={'model':'source'}, inplace=True)
 ext_df2['label'] = 1
