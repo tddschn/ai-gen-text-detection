@@ -66,7 +66,9 @@ def get_prediction0(model_path, model_weights):
             logits = self.classifier(embeddings)
             return logits
 
-    df = pd.read_csv("../input/llm-detect-ai-generated-text/test_essays.csv")
+    df = pd.read_csv(
+        "/mnt/beegfs/xchen87/ai-gen/data/llm-detect-ai-generated-text/test_essays.csv"
+    )
     id_list = df["id"].values
     text_list = df["text"].values
 
